@@ -84,4 +84,32 @@ curl -X POST http://localhost:8000/api/consulta/ \
 
 - [Documentação Completa](docs/README.md)
 - [Guia de Contribuição](CONTRIBUTING.md)
-- [Changelog](CHANGELOG.md) 
+- [Changelog](CHANGELOG.md)
+
+## Development Tips
+
+1. Keep PDFs out of git (already configured in .gitignore)
+2. Use Git LFS for managing large files
+3. Use branches for new features
+4. Make small, frequent commits
+5. Keep dependencies updated
+
+## Common Issues
+
+1. **Error initializing indices**: Check if PDFs exist in the manuals/ folder
+2. **Memory errors**: Reduce PDF size or adjust configuration
+3. **Docker errors**: Verify directories were created correctly
+
+## Managing Large Files
+
+This project uses Git LFS to manage large files like PDFs. Vector indices are regenerated locally.
+
+### PDF Management
+
+1. PDFs are tracked with Git LFS (configured in .gitattributes)
+2. To add new manuals: `cp your-manual.pdf application/engine/moto_manual_agent/manuals/`
+3. Then: `git add application/engine/moto_manual_agent/manuals/your-manual.pdf`
+
+### Vector Indices
+
+Vector indices are not versioned. They're regenerated in each environment by running: 
