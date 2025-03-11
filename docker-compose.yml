@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    command: >
+      bash -c "
+        python /django_application/manage.py makemigrations &&
+        python /django_application/manage.py migrate &&
+        python /django_application/manage.py runserver 0.0.0.0:8000
+      "
+    volumes:
+      - .:/django_application
+      - ./application/engine/moto_manual_agent/vector_indices:/django_application/application/engine/moto_manual_agent/vector_indices
+      - ./application/engine/moto_manual_agent/manuals:/django_application/application/engine/moto_manual_agent/manuals
+    ports:
+      - "8000:8000"
+    working_dir: /django_application
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DJANGO_SETTINGS_MODULE=application.settings
+      - PYTHONPATH=/django_application
+      - TEST_MODE=true
+      - DEBUG=true
+    restart: unless-stopped
+    tty: true
+    stdin_open: true 

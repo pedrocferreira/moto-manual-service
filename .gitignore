@@ -1,0 +1,116 @@
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Ambiente Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+bin/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Ambientes virtuais
+venv/
+env/
+.env/
+.venv/
+
+# Arquivos de projeto
+*.pdf
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+
+# Diretórios específicos do projeto
+application/engine/moto_manual_agent/manuals/*
+!application/engine/moto_manual_agent/manuals/.gitkeep
+application/engine/moto_manual_agent/vector_indices/*
+!application/engine/moto_manual_agent/vector_indices/.gitkeep
+
+# Cache e temporários
+*.cache
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.*.local
+
+# Arquivos grandes (>10MB)
+*.zip
+*.gz
+*.tar
+*.rar
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual Environment
+dep/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+
+# Arquivos de log
+*.log
+
+# Arquivos de ambiente
+.env
+.env.local
+
+# Arquivos de cache
+*.cache
+
+# Arquivos de banco de dados
+*.sqlite3
+db.sqlite3
+
+# PDFs grandes específicos
+data/pdfs/honda/CBR1000*RR.2008.pdf
+data/pdfs/kawasaki/2020-MS-NINJA*ZX-6R-PORT*.pdf
+data/pdfs/honda/CB*600F*Hornet.2008-10.pdf 
+
+
+#front-end
+node_modules/
+
+frontend-temp/node_modules/
+data/*
+git pull origin main

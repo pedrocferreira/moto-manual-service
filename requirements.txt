@@ -1,0 +1,11 @@
+django>=4.0.0
+djangorestframework>=3.14.0
+gunicorn>=21.2.0
+python-dotenv>=1.0.0
+rakam-systems>=0.2.4
+openai>=1.0.0
+pandas>=2.0.0
+pymupdf>=1.23.0
+python-dotenv>=1.0.0
+pycryptodome>=3.19.1
+langdetect>=1.0.9

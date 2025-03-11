@@ -1,0 +1,32 @@
+# Criar o .dockerignore
+cat > .dockerignore << 'EOL'
+# Manter apenas os arquivos temporários e de desenvolvimento
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Arquivos de IDE e sistema
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+EOL

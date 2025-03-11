@@ -1,0 +1,47 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <h1>Assistente de Mecânica de Motos</h1>
+  </div>
+
+  <div class="messages-container" #messageContainer>
+    <div *ngFor="let message of messages" 
+         class="message"
+         [ngClass]="message.type">
+      <div class="content" [innerHTML]="message.content"></div>
+      
+      <div *ngIf="message.references?.length" class="references">
+        <h4>Referências:</h4>
+        <ul>
+          <li *ngFor="let ref of message.references">{{ ref }}</li>
+        </ul>
+      </div>
+      
+      <div class="timestamp">
+        {{ message.timestamp | date:'HH:mm' }}
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="message bot loading-message">
+      <div class="loading">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-container">
+    <form (ngSubmit)="sendMessage()">
+      <input type="text" 
+             [(ngModel)]="inputMessage"
+             name="message"
+             placeholder="Digite sua pergunta sobre mecânica de motos..."
+             [disabled]="isLoading"
+             (keypress)="onKeyPress($event)">
+      <button type="submit" [disabled]="isLoading || !inputMessage.trim()">
+        <span *ngIf="!isLoading">Enviar</span>
+        <span *ngIf="isLoading">Processando...</span>
+      </button>
+    </form>
+  </div>
+</div> 
