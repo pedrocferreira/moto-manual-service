@@ -2,7 +2,14 @@
   "/ask-manual": {
     "target": "http://localhost:8000",
     "secure": false,
-    "changeOrigin": true
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/ask-manual": "/ask-manual"
+    },
+    "headers": {
+      "Connection": "keep-alive"
+    }
   },
   "/api": {
     "target": "http://localhost:8000",

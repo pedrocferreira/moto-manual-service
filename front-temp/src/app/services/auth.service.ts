@@ -1,40 +1,43 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
+
+// Interface para a resposta da API de login
+interface LoginResponse {
+  access: string;
+  refresh?: string;
+  username?: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
-  private tokenKey = 'auth_token';
+  private apiUrl = '/api';
+  
+  constructor(private http: HttpClient) {}
 
-  constructor(private http: HttpClient) {
-    this.isAuthenticatedSubject.next(!!this.getToken());
+  login(username: string, password: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/login/`, { username, password }).pipe(
+      tap(response => {
+        console.log('Resposta de login:', response);
+        localStorage.setItem('token', response.access);
+        localStorage.setItem('isLoggedIn', 'true');
+        console.log('Token armazenado:', this.getToken());
+      })
+    );
   }
 
-  login(username: string, password: string): Observable<any> {
-    return this.http.post<{token: string}>('/api/login/', { username, password })
-      .pipe(
-        tap(response => {
-          if (response.token) {
-            localStorage.setItem(this.tokenKey, response.token);
-            this.isAuthenticatedSubject.next(true);
-          }
-        })
-      );
+  logout(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('isLoggedIn');
   }
 
-  logout() {
-    localStorage.removeItem(this.tokenKey);
-    this.isAuthenticatedSubject.next(false);
+  isLoggedIn(): boolean {
+    return localStorage.getItem('isLoggedIn') === 'true';
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
-  }
-
-  isAuthenticated(): Observable<boolean> {
-    return this.isAuthenticatedSubject.asObservable();
+    return localStorage.getItem('token');
   }
 } 

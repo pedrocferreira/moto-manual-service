@@ -6,8 +6,11 @@ from scripts.setup_manuals import extract_text_from_pdfs
 import os
 from functools import lru_cache
 import hashlib
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -74,3 +77,33 @@ def ask_manual(request):
             "error": str(e),
             "status": "error"
         }, status=500)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    user = authenticate(username=username, password=password)
+    
+    if user:
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'token': str(refresh.access_token),
+            'refresh': str(refresh),
+            'username': user.username
+        })
+    else:
+        return Response({'error': 'Credenciais inválidas'}, status=401)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
+    if User.objects.filter(username=username).exists():
+        return Response({'error': 'Usuário já existe'}, status=400)
+    
+    user = User.objects.create_user(username=username, password=password)
+    return Response({'message': 'Usuário criado com sucesso'}, status=201)

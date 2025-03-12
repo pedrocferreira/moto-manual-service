@@ -17,7 +17,7 @@ COPY requirements.txt .
 # Instala as dependências Python
 RUN pip install -r requirements.txt
 RUN pip install -e .
-RUN pip install PyPDF2 
+RUN pip install PyPDF2 djangorestframework-simplejwt django-cors-headers
 
 # Cria diretórios necessários
 RUN mkdir -p application/engine/moto_manual_agent/manuals \
