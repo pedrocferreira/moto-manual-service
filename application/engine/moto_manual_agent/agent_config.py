@@ -3,7 +3,7 @@ import dotenv
 from rakam_systems.components.agents.agents import Agent, Action
 from rakam_systems.components.agents.actions import RAGGeneration
 from rakam_systems.components.vector_search.vector_store import VectorStore
-from .prompts import MOTO_MANUAL_PROMPT
+from .prompts import MOTO_MANUAL_PROMPT, LANGUAGE_PROMPTS
 import logging
 import time
 from .response_cache import ResponseCache
@@ -157,13 +157,32 @@ class MotoManualRAGAction(Action):
         try:
             # Detecta o idioma da query
             query_language = detect(query)
+            logging.info(f"Idioma detectado: {query_language}")
+            
+            # Define idiomas suportados - se não for suportado, usa inglês
+            supported_languages = ['pt', 'en', 'es', 'fr', 'de', 'it']
+            if query_language not in supported_languages:
+                logging.info(f"Idioma {query_language} não suportado, usando inglês como padrão")
+                query_language = 'en'
             
             # Define instruções específicas por idioma
             language_instructions = {
-                'pt': 'Responda em português de forma clara e técnica.',
+                'pt': 'Responda em português brasileiro de forma clara e técnica.',
                 'en': 'Answer in English clearly and technically.',
                 'es': 'Responda en español de forma clara y técnica.',
-                # Adicione outros idiomas conforme necessário
+                'fr': 'Répondez en français de manière claire et technique.',
+                'de': 'Antworten Sie klar und technisch auf Deutsch.',
+                'it': 'Rispondi in italiano in modo chiaro e tecnico.',
+            }
+            
+            # Traduções para seções da resposta
+            references_labels = {
+                'pt': 'Referências Detalhadas:',
+                'en': 'Detailed References:',
+                'es': 'Referencias Detalladas:',
+                'fr': 'Références Détaillées:',
+                'de': 'Detaillierte Referenzen:',
+                'it': 'Riferimenti Dettagliati:',
             }
             
             # Obtém a instrução no idioma detectado (usa inglês como fallback)
@@ -172,10 +191,10 @@ class MotoManualRAGAction(Action):
             # Adiciona a instrução de idioma ao prompt
             query_with_instruction = f"{language_instruction}\n\nPergunta: {query}"
             
-            logging.info("Executando a consulta: %s", query)
+            logging.info(f"Executando a consulta no idioma: {query_language}")
             
+            # Processar o contexto
             relevant_chunks = self.get_relevant_chunks(query, texts) if texts else []
-            
             context_parts = []
             for chunk in relevant_chunks:
                 context_parts.append(f"""
@@ -187,24 +206,53 @@ class MotoManualRAGAction(Action):
             if len(context) > MAX_CONTEXT_LENGTH:
                 context = context[:MAX_CONTEXT_LENGTH] + "..."
             
+            # Ajusta o prompt do sistema para o idioma correto
+            language_specific_prompt = LANGUAGE_PROMPTS[query_language]['system_prompt'] if query_language in LANGUAGE_PROMPTS else LANGUAGE_PROMPTS['en']['system_prompt']
+            
+            if query_language != 'en':
+                language_names = {
+                    'pt': 'português brasileiro',
+                    'es': 'español',
+                    'fr': 'français',
+                    'de': 'Deutsch',
+                    'it': 'italiano'
+                }
+                language_name = language_names.get(query_language, query_language)
+                
+                if query_language == 'pt':
+                    language_specific_prompt += f"\n\nIMPORTANTE: Responda SEMPRE em {language_name}, independentemente do idioma dos manuais."
+                elif query_language == 'es':
+                    language_specific_prompt += f"\n\nIMPORTANTE: Responda SIEMPRE en {language_name}, independientemente del idioma de los manuales."
+                elif query_language == 'fr':
+                    language_specific_prompt += f"\n\nIMPORTANT: Répondez TOUJOURS en {language_name}, quelle que soit la langue des manuels."
+                elif query_language == 'de':
+                    language_specific_prompt += f"\n\nWICHTIG: Antworten Sie IMMER auf {language_name}, unabhängig von der Sprache der Handbücher."
+                elif query_language == 'it':
+                    language_specific_prompt += f"\n\nIMPORTANTE: Rispondi SEMPRE in {language_name}, indipendentemente dalla lingua dei manuali."
+            
+            # Chamar a API com os prompts corretos no idioma detectado
             response = self.rag_generator.execute(
                 query=query_with_instruction,
                 collection_names=["moto_manuals"],
                 prompt_kwargs={"context": context} if context else {},
                 stream=False,
                 temperature=0.3,
-                max_tokens=1000,  # Aumentado para respostas mais detalhadas
+                max_tokens=1000,
                 top_p=0.85,
-                presence_penalty=0.2
+                presence_penalty=0.2,
+                sys_prompt=language_specific_prompt
             )
             
             if response:
-                sources_summary = f"\n\nReferências Detalhadas ({query_language}):\n"
+                # Adiciona as referências no idioma correto
+                ref_label = references_labels.get(query_language, references_labels['en'])
+                sources_summary = f"\n\n{ref_label}\n"
                 for chunk in relevant_chunks:
                     sources_summary += f"- Manual: {chunk['source']}\n"
                 
                 response = response + sources_summary
                 
+                # Registra o idioma no cache
                 self.response_cache.cache_response(
                     query, 
                     f"[Formato v{RESPONSE_FORMAT_VERSION}][Lang:{query_language}]\n{response}"
@@ -213,11 +261,14 @@ class MotoManualRAGAction(Action):
             return response
 
         except Exception as e:
-            # Mensagens de erro também no idioma detectado
+            # Mensagens de erro traduzidas
             error_messages = {
                 'pt': 'Desculpe, ocorreu um erro ao processar sua pergunta. Por favor, tente novamente.',
                 'en': 'Sorry, an error occurred while processing your question. Please try again.',
                 'es': 'Lo siento, ocurrió un error al procesar su pregunta. Por favor, inténtelo de nuevo.',
+                'fr': 'Désolé, une erreur s\'est produite lors du traitement de votre question. Veuillez réessayer.',
+                'de': 'Entschuldigung, bei der Verarbeitung Ihrer Frage ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
+                'it': 'Mi dispiace, si è verificato un errore durante l\'elaborazione della tua domanda. Per favore riprova.',
             }
             logging.error(f"Erro ao processar query: {str(e)}")
             return error_messages.get(query_language, error_messages['en'])
@@ -236,3 +287,34 @@ AGENT = MotoManualAgent(
     model=MODEL,
     api_key=os.getenv("OPENAI_API_KEY")
 )
+
+# Adapte o prompt do sistema para ser mais explícito sobre o idioma
+def get_system_prompt_with_language(language_code):
+    # Base do prompt em inglês
+    base_prompt = """
+    You are a motorcycle mechanic expert with extensive technical knowledge.
+    Your role is to provide detailed and practical instructions on motorcycle maintenance and repair,
+    using information from available technical manuals.
+    
+    Rules:
+    
+    1. Always provide detailed step-by-step instructions
+    2. For each technical recommendation, ALWAYS specify:
+       - Which manufacturer made the recommendation
+       - In which specific manual it was found
+       - The exact section of the manual
+       - Any reference numbers or codes mentioned
+       - Exact technical specifications (measurements, torques, etc.)
+    """
+    
+    # Adicione instruções explícitas sobre o idioma
+    language_specific = {
+        'pt': "\nIMPORTANTE: Responda SEMPRE em português brasileiro, independentemente do idioma usado nos manuais técnicos.",
+        'en': "\nIMPORTANT: ALWAYS answer in English, regardless of the language used in the technical manuals.",
+        'es': "\nIMPORTANTE: Responda SIEMPRE en español, independientemente del idioma utilizado en los manuales técnicos.",
+        'fr': "\nIMPORTANT: Répondez TOUJOURS en français, quel que soit la langue utilisée dans les manuels techniques.",
+        'de': "\nWICHTIG: Antworten Sie IMMER auf Deutsch, unabhängig von der in den technischen Handbüchern verwendeten Sprache.",
+        'it': "\nIMPORTANTE: Rispondi SEMPRE in italiano, indipendentemente dalla lingua utilizzata nei manuali tecnici.",
+    }
+    
+    return base_prompt + language_specific.get(language_code, language_specific['en']) + MOTO_MANUAL_SYS_PROMPT_WITH_REFS
