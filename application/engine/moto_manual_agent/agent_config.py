@@ -155,8 +155,6 @@ class MotoManualRAGAction(Action):
 
     def execute(self, query: str, texts: list = None, **kwargs):
         try:
-            logging.info("Iniciando execução da consulta")
-            
             # Detecta o idioma da query
             query_language = detect(query)
             logging.info(f"Idioma detectado: {query_language}")
@@ -166,8 +164,6 @@ class MotoManualRAGAction(Action):
             if query_language not in supported_languages:
                 logging.info(f"Idioma {query_language} não suportado, usando inglês como padrão")
                 query_language = 'en'
-            
-            logging.info("Configurando instruções para o idioma")
             
             # Define instruções específicas por idioma
             language_instructions = {
@@ -179,16 +175,26 @@ class MotoManualRAGAction(Action):
                 'it': 'Rispondi in italiano in modo chiaro e tecnico.',
             }
             
-            # Obter a instrução no idioma correto
+            # Traduções para seções da resposta
+            references_labels = {
+                'pt': 'Referências Detalhadas:',
+                'en': 'Detailed References:',
+                'es': 'Referencias Detalladas:',
+                'fr': 'Références Détaillées:',
+                'de': 'Detaillierte Referenzen:',
+                'it': 'Riferimenti Dettagliati:',
+            }
+            
+            # Obtém a instrução no idioma detectado (usa inglês como fallback)
             language_instruction = language_instructions.get(query_language, language_instructions['en'])
+            
+            # Adiciona a instrução de idioma ao prompt
             query_with_instruction = f"{language_instruction}\n\nPergunta: {query}"
-            logging.info(f"Query formatada: {query_with_instruction[:50]}...")
             
-            # Processar contexto
-            logging.info("Processando chunks de contexto")
+            logging.info(f"Executando a consulta no idioma: {query_language}")
+            
+            # Processar o contexto
             relevant_chunks = self.get_relevant_chunks(query, texts) if texts else []
-            logging.info(f"Encontrados {len(relevant_chunks)} chunks relevantes")
-            
             context_parts = []
             for chunk in relevant_chunks:
                 context_parts.append(f"""
@@ -200,40 +206,46 @@ class MotoManualRAGAction(Action):
             if len(context) > MAX_CONTEXT_LENGTH:
                 context = context[:MAX_CONTEXT_LENGTH] + "..."
             
-            # Preparar prompt do sistema
-            logging.info("Preparando prompt do sistema")
-            try:
-                language_specific_prompt = LANGUAGE_PROMPTS[query_language]['system_prompt'] if query_language in LANGUAGE_PROMPTS else LANGUAGE_PROMPTS['en']['system_prompt']
-                logging.info(f"Prompt do sistema obtido para idioma {query_language}")
-            except Exception as prompt_error:
-                logging.error(f"Erro ao obter prompt específico: {prompt_error}")
-                # Fallback para o prompt original em caso de erro
-                language_specific_prompt = MOTO_MANUAL_SYS_PROMPT_WITH_REFS
+            # Ajusta o prompt do sistema para o idioma correto
+            language_specific_prompt = LANGUAGE_PROMPTS[query_language]['system_prompt'] if query_language in LANGUAGE_PROMPTS else LANGUAGE_PROMPTS['en']['system_prompt']
             
-            # Chamada à API
-            logging.info("Enviando requisição para o modelo de linguagem")
-            try:
-                response = self.rag_generator.execute(
-                    query=query_with_instruction,
-                    collection_names=["moto_manuals"],
-                    prompt_kwargs={"context": context} if context else {},
-                    stream=False,
-                    temperature=0.3,
-                    max_tokens=1000,
-                    top_p=0.85,
-                    presence_penalty=0.2,
-                    sys_prompt=language_specific_prompt
-                )
-                logging.info("Resposta recebida do modelo")
-            except Exception as api_error:
-                logging.error(f"Erro na chamada à API: {api_error}")
-                raise
+            if query_language != 'en':
+                language_names = {
+                    'pt': 'português brasileiro',
+                    'es': 'español',
+                    'fr': 'français',
+                    'de': 'Deutsch',
+                    'it': 'italiano'
+                }
+                language_name = language_names.get(query_language, query_language)
+                
+                if query_language == 'pt':
+                    language_specific_prompt += f"\n\nIMPORTANTE: Responda SEMPRE em {language_name}, independentemente do idioma dos manuais."
+                elif query_language == 'es':
+                    language_specific_prompt += f"\n\nIMPORTANTE: Responda SIEMPRE en {language_name}, independientemente del idioma de los manuales."
+                elif query_language == 'fr':
+                    language_specific_prompt += f"\n\nIMPORTANT: Répondez TOUJOURS en {language_name}, quelle que soit la langue des manuels."
+                elif query_language == 'de':
+                    language_specific_prompt += f"\n\nWICHTIG: Antworten Sie IMMER auf {language_name}, unabhängig von der Sprache der Handbücher."
+                elif query_language == 'it':
+                    language_specific_prompt += f"\n\nIMPORTANTE: Rispondi SEMPRE in {language_name}, indipendentemente dalla lingua dei manuali."
             
-            # Processamento da resposta
+            # Chamar a API com os prompts corretos no idioma detectado
+            response = self.rag_generator.execute(
+                query=query_with_instruction,
+                collection_names=["moto_manuals"],
+                prompt_kwargs={"context": context} if context else {},
+                stream=False,
+                temperature=0.3,
+                max_tokens=1000,
+                top_p=0.85,
+                presence_penalty=0.2,
+                sys_prompt=language_specific_prompt
+            )
+            
             if response:
-                logging.info("Formatando resposta final")
                 # Adiciona as referências no idioma correto
-                ref_label = "Detailed References:" if query_language == 'en' else "Referências Detalhadas:"
+                ref_label = references_labels.get(query_language, references_labels['en'])
                 sources_summary = f"\n\n{ref_label}\n"
                 for chunk in relevant_chunks:
                     sources_summary += f"- Manual: {chunk['source']}\n"
@@ -249,7 +261,6 @@ class MotoManualRAGAction(Action):
             return response
 
         except Exception as e:
-            logging.error(f"Erro detalhado: {str(e)}", exc_info=True)
             # Mensagens de erro traduzidas
             error_messages = {
                 'pt': 'Desculpe, ocorreu um erro ao processar sua pergunta. Por favor, tente novamente.',
@@ -259,6 +270,7 @@ class MotoManualRAGAction(Action):
                 'de': 'Entschuldigung, bei der Verarbeitung Ihrer Frage ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
                 'it': 'Mi dispiace, si è verificato un errore durante l\'elaborazione della tua domanda. Per favore riprova.',
             }
+            logging.error(f"Erro ao processar query: {str(e)}")
             return error_messages.get(query_language, error_messages['en'])
 
 class MotoManualAgent(Agent):
