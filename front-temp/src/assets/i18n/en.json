@@ -1,0 +1,20 @@
+{
+  "app.title": "Motorcycle Mechanic Assistant",
+  "app.chat.placeholder": "Type your question about motorcycle mechanics...",
+  "app.chat.send": "Send",
+  "app.chat.processing": "Processing...",
+  "app.chat.greeting": "Hello! I'm your specialized motorcycle mechanics assistant. How can I help you?",
+  "app.chat.error": "Sorry, an error occurred while processing your message.",
+  "app.chat.references": "References:",
+  "app.nav.home": "Home",
+  "app.nav.chat": "Chat",
+  "app.nav.login": "Login",
+  "app.login.title": "Login",
+  "app.login.username": "Username",
+  "app.login.password": "Password",
+  "app.login.submit": "Login",
+  "app.login.error": "Invalid username or password",
+  "app.login.required": "Please fill in all fields",
+  "app.home.title": "Welcome to the Manual Query System",
+  "app.home.description": "This is the home page of our system."
+} 

@@ -1,6 +1,7 @@
 <div class="chat-container">
   <div class="chat-header">
-    <h1>Assistente de Mecânica de Motos</h1>
+    <h1>{{ 'app.title' | translate }}</h1>
+    <app-language-selector></app-language-selector>
   </div>
 
   <div class="messages-container" #messageContainer>
@@ -10,7 +11,7 @@
       <div class="content" [innerHTML]="message.content"></div>
       
       <div *ngIf="message.references?.length" class="references">
-        <h4>Referências:</h4>
+        <h4>{{ 'app.chat.references' | translate }}</h4>
         <ul>
           <li *ngFor="let ref of message.references">{{ ref }}</li>
         </ul>
@@ -35,12 +36,12 @@
       <input type="text" 
              [(ngModel)]="inputMessage"
              name="message"
-             placeholder="Digite sua pergunta sobre mecânica de motos..."
+             placeholder="{{ 'app.chat.placeholder' | translate }}"
              [disabled]="isLoading"
              (keypress)="onKeyPress($event)">
       <button type="submit" [disabled]="isLoading || !inputMessage.trim()">
-        <span *ngIf="!isLoading">Enviar</span>
-        <span *ngIf="isLoading">Processando...</span>
+        <span *ngIf="!isLoading">{{ 'app.chat.send' | translate }}</span>
+        <span *ngIf="isLoading">{{ 'app.chat.processing' | translate }}</span>
       </button>
     </form>
   </div>

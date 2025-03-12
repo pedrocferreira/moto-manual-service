@@ -20,8 +20,9 @@ export class ChatService {
     console.log('ChatService inicializado com URL:', this.apiUrl);
   }
 
-  askManual(query: string): Observable<ApiResponse> {
+  askManual(query: string, language: string = 'pt-br'): Observable<ApiResponse> {
     console.log('Enviando consulta para:', this.apiUrl);
+    console.log('Idioma selecionado:', language);
     
     // Obtenha o token do localStorage
     const token = localStorage.getItem('token');
@@ -30,11 +31,19 @@ export class ChatService {
     // Configure os headers com o token
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'Accept-Language': language // Adiciona o idioma no header
     });
     
+    // Adiciona o idioma no corpo da requisição também
+    // (alguns backends podem preferir um ou outro método)
+    const payload = {
+      query: query,
+      language: language
+    };
+    
     // Envie a requisição com os headers
-    return this.http.post<ApiResponse>(this.apiUrl, { query }, { headers })
+    return this.http.post<ApiResponse>(this.apiUrl, payload, { headers })
       .pipe(
         catchError(this.handleError)
       );

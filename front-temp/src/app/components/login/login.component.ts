@@ -3,33 +3,38 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe, LanguageSelectorComponent],
   template: `
     <div class="login-container">
       <div class="login-box">
-        <h2>Login</h2>
+        <div class="language-selector-container">
+          <app-language-selector></app-language-selector>
+        </div>
+        <h2>{{ 'app.login.title' | translate }}</h2>
         <form (ngSubmit)="onSubmit()">
           <div class="form-group">
             <input type="text" 
                    [(ngModel)]="username" 
                    name="username" 
-                   placeholder="Usuário"
+                   placeholder="{{ 'app.login.username' | translate }}"
                    required>
           </div>
           <div class="form-group">
             <input type="password" 
                    [(ngModel)]="password" 
                    name="password" 
-                   placeholder="Senha"
+                   placeholder="{{ 'app.login.password' | translate }}"
                    required>
           </div>
-          <button type="submit">Entrar</button>
+          <button type="submit">{{ 'app.login.submit' | translate }}</button>
           <div *ngIf="error" class="error-message">
-            {{ error }}
+            {{ error | translate }}
           </div>
         </form>
       </div>
@@ -49,7 +54,7 @@ export class LoginComponent {
 
   onSubmit() {
     if (!this.username || !this.password) {
-      this.error = 'Por favor, preencha todos os campos';
+      this.error = 'app.login.required';
       return;
     }
 
@@ -58,7 +63,7 @@ export class LoginComponent {
         this.router.navigate(['/chat']);
       },
       error: (err) => {
-        this.error = 'Usuário ou senha inválidos';
+        this.error = 'app.login.error';
         console.error('Erro no login:', err);
       }
     });

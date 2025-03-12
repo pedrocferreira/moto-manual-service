@@ -1,0 +1,20 @@
+{
+  "app.title": "Assistant Mécanique Moto",
+  "app.chat.placeholder": "Tapez votre question sur la mécanique moto...",
+  "app.chat.send": "Envoyer",
+  "app.chat.processing": "Traitement en cours...",
+  "app.chat.greeting": "Bonjour! Je suis votre assistant spécialisé en mécanique moto. Comment puis-je vous aider?",
+  "app.chat.error": "Désolé, une erreur s'est produite lors du traitement de votre message.",
+  "app.chat.references": "Références:",
+  "app.nav.home": "Accueil",
+  "app.nav.chat": "Chat",
+  "app.nav.login": "Connexion",
+  "app.login.title": "Connexion",
+  "app.login.username": "Nom d'utilisateur",
+  "app.login.password": "Mot de passe",
+  "app.login.submit": "Se connecter",
+  "app.login.error": "Nom d'utilisateur ou mot de passe invalide",
+  "app.login.required": "Veuillez remplir tous les champs",
+  "app.home.title": "Bienvenue sur le Système de Consultation de Manuels",
+  "app.home.description": "Ceci est la page d'accueil de notre système."
+} 
